@@ -18,7 +18,7 @@ def ip_to_hex(ip):
         'a646464'
         >>>
     """
-    return str(hex(int(ipaddress.ip_address(ip))))[2:]
+    return hex(int(ipaddress.ip_address(ip)))[2:]
 
 
 def ip_addition(ip, val):
@@ -242,9 +242,7 @@ def get_first_usable(ip_network):
         >>>
     """
     net = ipaddress.ip_network(ip_network)
-    if net.prefixlen == 31 or net.prefixlen == 127:
-        return str(net[0])
-    return str(net[1])
+    return str(net[0]) if net.prefixlen in [31, 127] else str(net[1])
 
 
 def get_usable_range(ip_network):
@@ -263,7 +261,7 @@ def get_usable_range(ip_network):
         >>>
     """
     net = ipaddress.ip_network(ip_network)
-    if net.prefixlen == 31 or net.prefixlen == 127:
+    if net.prefixlen in [31, 127]:
         lower_bound = str(net[0])
         upper_bound = str(net[1])
     else:

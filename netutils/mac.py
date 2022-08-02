@@ -10,10 +10,7 @@ def _valid_mac(func):
 
     @wraps(func)
     def decorated(*args, **kwargs):
-        if kwargs.get("mac"):
-            mac = kwargs.get("mac")
-        else:
-            mac = args[0]
+        mac = kwargs.get("mac") or args[0]
         if not is_valid_mac(mac):
             raise ValueError(f"There was not a valid mac address in: `{mac}`")
         return func(*args, **kwargs)
@@ -38,10 +35,7 @@ def is_valid_mac(mac):
         False
         >>>
     """
-    for pattern in list(MAC_REGEX.values()):
-        if re.fullmatch(pattern, mac):
-            return True
-    return False
+    return any(re.fullmatch(pattern, mac) for pattern in list(MAC_REGEX.values()))
 
 
 @_valid_mac

@@ -31,12 +31,15 @@ def vlanlist_to_config(vlan_list, first_line_len=48, other_line_len=44):
         raise ValueError("Valid VLAN range is 1-4094")
 
     # Group consecutive VLANs
-    vlan_groups = list()
-    for _, vlan in groupby(enumerate(clean_vlan_list), lambda vlan: vlan[0] - vlan[1]):
-        vlan_groups.append(list(map(itemgetter(1), vlan)))
+    vlan_groups = [
+        list(map(itemgetter(1), vlan))
+        for _, vlan in groupby(
+            enumerate(clean_vlan_list), lambda vlan: vlan[0] - vlan[1]
+        )
+    ]
 
     # Create VLAN portion of config
-    vlan_strings = list()
+    vlan_strings = []
     for group in vlan_groups:
         if len(group) == 1:
             vlan_strings.append(f"{group[0]}")
@@ -51,10 +54,9 @@ def vlanlist_to_config(vlan_list, first_line_len=48, other_line_len=44):
 
     # Split VLAN config if lines are too long
     first_line = re.match(f"^.{{0,{first_line_len}}}(?=,)", vlan_cfg)
-    vlan_cfg_lines = [first_line.group(0)]
+    vlan_cfg_lines = [first_line[0]]
     next_lines = next_lines = re.compile(f"(?<=,).{{0,{other_line_len}}}(?=,|$)")
-    for line in next_lines.findall(vlan_cfg, first_line.end()):
-        vlan_cfg_lines.append(line)
+    vlan_cfg_lines.extend(iter(next_lines.findall(vlan_cfg, first_line.end())))
     return vlan_cfg_lines
 
 

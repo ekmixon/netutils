@@ -1,5 +1,6 @@
 """Variable definitions to map from network automation library to network automation library."""
 
+
 import copy
 
 _NETMIKO_LIB_MAPPER = {
@@ -113,10 +114,7 @@ _NETMIKO_LIB_MAPPER = {
     "yamaha": {},
 }
 # netmiko is the base name, so every key is a value, this ensure that.
-NETMIKO_LIB_MAPPER = {}
-for key in list(_NETMIKO_LIB_MAPPER.keys()):
-    NETMIKO_LIB_MAPPER[key] = key
-
+NETMIKO_LIB_MAPPER = {key: key for key in list(_NETMIKO_LIB_MAPPER.keys())}
 # ntc templates is primarily based on netmiko, so a copy is in order
 NTCTEMPLATES_LIB_MAPPER = copy.deepcopy(NETMIKO_LIB_MAPPER)
 NTCTEMPLATES_LIB_MAPPER["watchguard_firebox"] = "watchguard_firebox"

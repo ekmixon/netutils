@@ -22,7 +22,7 @@ class BaseConfigParser:  # pylint: disable=too-few-public-methods
         self.config = config
         self._config = None
         self._current_parents = ()
-        self.generator_config = (line for line in self.config_lines_only.splitlines())
+        self.generator_config = iter(self.config_lines_only.splitlines())
         self.config_lines = []
         self.build_config_relationship()
 
@@ -64,9 +64,7 @@ class BaseSpaceConfigParser(BaseConfigParser):
         Returns:
             bool: True if line ends banner, else False.
         """
-        if self.banner_end in line:
-            return True
-        return False
+        return self.banner_end in line
 
     def is_banner_start(self, line):
         """Determine if the line starts a banner config.
@@ -77,10 +75,10 @@ class BaseSpaceConfigParser(BaseConfigParser):
         Returns:
             bool: True if line starts banner, else False.
         """
-        for banner_start in self.banner_start:
-            if line.lstrip().startswith(banner_start):
-                return True
-        return False
+        return any(
+            line.lstrip().startswith(banner_start)
+            for banner_start in self.banner_start
+        )
 
     def is_comment(self, line):
         """Determine if line is a comment.
@@ -98,10 +96,10 @@ class BaseSpaceConfigParser(BaseConfigParser):
             True
             >>>
         """
-        for comment_char in self.comment_chars:
-            if line.lstrip().startswith(comment_char):
-                return True
-        return False
+        return any(
+            line.lstrip().startswith(comment_char)
+            for comment_char in self.comment_chars
+        )
 
     @property
     def config_lines_only(self):
@@ -172,9 +170,11 @@ class BaseSpaceConfigParser(BaseConfigParser):
                 previous_parent = self._current_parents[-deindent_level]
                 previous_indent = self.get_leading_space_count(previous_parent)
         except IndexError:
-            raise IndexError("\nValidate the first line does not begin with a space" "\n{}\n".format(line))
-        parents = self._current_parents[:-deindent_level] or (self._current_parents[0],)
-        return parents
+            raise IndexError(
+                f"\nValidate the first line does not begin with a space\n{line}\n"
+            )
+
+        return self._current_parents[:-deindent_level] or (self._current_parents[0],)
 
     def _build_banner(self, config_line):
         """Handle banner config lines.
@@ -454,9 +454,7 @@ class CiscoConfigParser(BaseSpaceConfigParser):
         _, delimeter, banner = config_line.partition(self.banner_end)
         # Based on NXOS configs, the banner delimeter is ignored until another char is used
         banner_config_start = banner.lstrip(delimeter)
-        if delimeter not in banner_config_start:
-            return False
-        return True
+        return delimeter in banner_config_start
 
     def is_banner_start(self, line):
         """Determine if the line starts a banner config."""
@@ -472,10 +470,10 @@ class CiscoConfigParser(BaseSpaceConfigParser):
 
     @banner_end.setter
     def banner_end(self, banner_start_line):
-        banner_parsed = self.regex_banner.match(banner_start_line)
-        if not banner_parsed:
+        if banner_parsed := self.regex_banner.match(banner_start_line):
+            self._banner_end = banner_parsed.groupdict()["banner_delimiter"]
+        else:
             raise ValueError("There was an error parsing your banner, the end of the banner could not be found")
-        self._banner_end = banner_parsed.groupdict()["banner_delimiter"]
 
 
 class IOSConfigParser(CiscoConfigParser, BaseSpaceConfigParser):

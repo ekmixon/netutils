@@ -108,7 +108,7 @@ def canonical_interface_name(interface, addl_name_map=None, verify=False):
         >>>
     """
     name_map = {}
-    name_map.update(BASE_INTERFACES)
+    name_map |= BASE_INTERFACES
     interface_type, interface_number = split_interface(interface)
 
     if isinstance(addl_name_map, dict):
@@ -143,27 +143,22 @@ def abbreviated_interface_name(interface, addl_name_map=None, addl_reverse_map=N
         >>>
     """
     name_map = {}
-    name_map.update(BASE_INTERFACES)
+    name_map |= BASE_INTERFACES
     interface_type, interface_number = split_interface(interface)
 
     if isinstance(addl_name_map, dict):
         name_map.update(addl_name_map)
 
     rev_name_map = {}
-    rev_name_map.update(REVERSE_MAPPING)
+    rev_name_map |= REVERSE_MAPPING
 
     if isinstance(addl_reverse_map, dict):
         rev_name_map.update(addl_reverse_map)
 
     # Try to ensure canonical type.
-    if name_map.get(interface_type):
-        canonical_type = name_map.get(interface_type)
-    else:
-        canonical_type = interface_type
-
+    canonical_type = name_map.get(interface_type) or interface_type
     try:
-        abbreviated_name = rev_name_map[canonical_type] + str(interface_number)
-        return abbreviated_name
+        return rev_name_map[canonical_type] + str(interface_number)
 
     except KeyError:
         pass

@@ -26,13 +26,12 @@ def longest_prefix_match(ip_addr, routes):
     """
     if not isinstance(routes, list):
         raise TypeError(f"'routing_table' should be a list, got {type(routes)}")
-    if not len(routes) > 0:
+    if len(routes) <= 0:
         raise IndexError(f"'routing_table' should have more than zero indexes. Got {len(routes)}")
     if isinstance(ip_addr, str):
         ip_addr = ipaddress.ip_address(ip_addr)
-    else:
-        if not isinstance(ipaddress.ip_address, ip_addr):
-            raise TypeError(f"'ip_addr' should be a str, got {type(ip_addr)}")
+    elif not isinstance(ipaddress.ip_address, ip_addr):
+        raise TypeError(f"'ip_addr' should be a str, got {type(ip_addr)}")
 
     networks = [
         ipaddress.IPv4Network(f'{route["network"]}/{route["mask"]}')

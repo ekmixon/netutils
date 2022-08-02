@@ -20,6 +20,6 @@ def test_lib_mapper():
 
 @pytest.mark.parametrize("lib", ["ANSIBLE", "NETMIKO", "NTCTEMPLATES", "NAPALM", "PYATS", "PYNTC"])
 def test_lib_mapper_reverse(lib):
-    mapper = dict((v, k) for k, v in getattr(lib_mapper, f"{lib}_LIB_MAPPER").items())
+    mapper = {v: k for k, v in getattr(lib_mapper, f"{lib}_LIB_MAPPER").items()}
     rev_mapper = getattr(lib_mapper, f"{lib}_LIB_MAPPER_REVERSE")
     assert mapper == rev_mapper

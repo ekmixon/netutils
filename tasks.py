@@ -22,9 +22,7 @@ def is_truthy(arg):
         >>> is_truthy('yes')
         True
     """
-    if isinstance(arg, bool):
-        return arg
-    return bool(strtobool(arg))
+    return arg if isinstance(arg, bool) else bool(strtobool(arg))
 
 
 PYPROJECT_CONFIG = toml.load("pyproject.toml")
@@ -59,12 +57,13 @@ def run_cmd(context, exec_cmd, local=INVOKE_LOCAL):
     """
     if is_truthy(local):
         print(f"LOCAL - Running command {exec_cmd}")
-        result = context.run(exec_cmd, pty=True)
+        return context.run(exec_cmd, pty=True)
     else:
         print(f"DOCKER - Running command: {exec_cmd} container: {IMAGE_NAME}:{IMAGE_VER}")
-        result = context.run(f"docker run -it -v {PWD}:/local {IMAGE_NAME}:{IMAGE_VER} sh -c '{exec_cmd}'", pty=True)
-
-    return result
+        return context.run(
+            f"docker run -it -v {PWD}:/local {IMAGE_NAME}:{IMAGE_VER} sh -c '{exec_cmd}'",
+            pty=True,
+        )
 
 
 @task
@@ -294,4 +293,4 @@ def clean_docs(context, builddir="docs/build"):
         builddir (str, optional): Directory to be removed. Defaults to "build".
     """
     print(f"Removing everything under {builddir} directory...")
-    context.run("rm -rf " + builddir)
+    context.run(f"rm -rf {builddir}")

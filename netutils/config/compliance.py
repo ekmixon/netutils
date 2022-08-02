@@ -88,11 +88,10 @@ def _is_feature_ordered_compliant(feature_intended_cfg, feature_actual_cfg):
         True
         >>>
     """
-    if not feature_intended_cfg and not feature_actual_cfg:
+    if feature_intended_cfg or feature_actual_cfg:
+        return feature_intended_cfg == feature_actual_cfg
+    else:
         return True
-    if feature_intended_cfg == feature_actual_cfg:
-        return True
-    return False
 
 
 def _open_file_config(cfg_path):
@@ -167,12 +166,15 @@ def compliance(features, backup, intended, network_os, cfg_type="file"):
         backup_cfg = backup
         intended_cfg = intended
 
-    compliance_results = dict()
+    compliance_results = {}
 
     for feature in features:
         backup_str = section_config(feature, backup_cfg, network_os)
         intended_str = section_config(feature, intended_cfg, network_os)
-        compliance_results.update({feature["name"]: feature_compliance(feature, backup_str, intended_str, network_os)})
+        compliance_results[feature["name"]] = feature_compliance(
+            feature, backup_str, intended_str, network_os
+        )
+
 
     return compliance_results
 
@@ -206,7 +208,7 @@ def config_section_not_parsed(features, device_cfg, network_os):
         {'remaining_cfg': '!\naccess-list 1 permit 10.10.10.10\naccess-list 1 permit 10.10.10.11', 'section_not_found': []}
     """
     remaining_cfg = device_cfg
-    section_not_found = list()
+    section_not_found = []
     for feature in features:
         feature_cfg = section_config(feature, device_cfg, network_os)
         if not feature_cfg:
@@ -317,9 +319,8 @@ def feature_compliance(feature, backup_cfg, intended_cfg, network_os):
                 "unordered_compliant": True,
             }
         )
-    else:
-        if backup_cfg and intended_cfg:
-            feature_data.update(_check_configs_differences(intended_cfg, backup_cfg, network_os))
+    elif backup_cfg and intended_cfg:
+        feature_data.update(_check_configs_differences(intended_cfg, backup_cfg, network_os))
     if feature["ordered"] is True:
         feature_data["compliant"] = feature_data["ordered_compliant"]
     elif feature["ordered"] is False:
@@ -356,14 +357,16 @@ def find_unordered_cfg_lines(intended_cfg, actual_cfg):
     """
     intended_lines = intended_cfg.splitlines()
     actual_lines = actual_cfg.splitlines()
-    unordered_lines = list()
+    unordered_lines = []
     if len(intended_lines) == len(actual_lines):
         # Process to find actual lines that are misordered
         unordered_lines = [(e1, e2) for e1, e2 in zip(intended_lines, actual_lines) if e1 != e2]
     # Process to find determine if there are any different lines, regardless of order
-    if not set(intended_lines).difference(actual_lines):
-        return (True, unordered_lines)
-    return (False, unordered_lines)
+    return (
+        (False, unordered_lines)
+        if set(intended_lines).difference(actual_lines)
+        else (True, unordered_lines)
+    )
 
 
 def section_config(feature, device_cfg, network_os):

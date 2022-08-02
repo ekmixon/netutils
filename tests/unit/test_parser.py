@@ -1,4 +1,5 @@
 """Test for the network os parser functions."""
+
 import os
 import glob
 
@@ -11,8 +12,10 @@ TXT_FILE = "_sent.txt"
 
 parameters = []
 for network_os in list(compliance.parser_map.keys()):
-    for _file in glob.glob(f"{MOCK_DIR}/{network_os}/*{TXT_FILE}"):
-        parameters.append([_file, network_os])
+    parameters.extend(
+        [_file, network_os]
+        for _file in glob.glob(f"{MOCK_DIR}/{network_os}/*{TXT_FILE}")
+    )
 
 
 @pytest.mark.parametrize("_file, network_os", parameters)
@@ -20,7 +23,7 @@ def test_parser(_file, network_os, get_text_data, get_python_data):  # pylint: d
     truncate_file = os.path.join(MOCK_DIR, _file[: -len(TXT_FILE)])
 
     device_cfg = get_text_data(os.path.join(MOCK_DIR, _file))
-    received_data = get_python_data(truncate_file + "_received.py", "data")
+    received_data = get_python_data(f"{truncate_file}_received.py", "data")
     os_parser = compliance.parser_map[network_os]
     assert os_parser(device_cfg).config_lines == received_data
 

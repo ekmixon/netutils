@@ -102,9 +102,7 @@ def compare_type5(unencrypted_password, encrypted_password, return_original=Fals
     """
     salt = get_hash_salt(encrypted_password)
     if encrypt_type5(unencrypted_password, salt) == encrypted_password:
-        if return_original is True:
-            return encrypted_password
-        return True
+        return encrypted_password if return_original is True else True
     return False
 
 
@@ -128,9 +126,7 @@ def compare_type7(unencrypted_password, encrypted_password, return_original=Fals
         >>>
     """
     if decrypt_type7(encrypted_password) == unencrypted_password:
-        if return_original is True:
-            return encrypted_password
-        return True
+        return encrypted_password if return_original is True else True
     return False
 
 
@@ -183,9 +179,12 @@ def encrypt_type5(unencrypted_password, salt=None, salt_len=4):
         >>>
     """
     if not salt:
-        salt = "".join(secrets.choice(ALPHABET) for i in range(salt_len))
+        salt = "".join(secrets.choice(ALPHABET) for _ in range(salt_len))
     elif not set(salt) <= set(ALPHABET):
-        raise ValueError("type5_pw salt used inproper characters, must be one of %s" % (ALPHABET))
+        raise ValueError(
+            f"type5_pw salt used inproper characters, must be one of {ALPHABET}"
+        )
+
     return crypt.crypt(unencrypted_password, f"$1${salt}$")
 
 
